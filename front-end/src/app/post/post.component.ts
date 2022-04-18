@@ -12,6 +12,7 @@ import { User } from '../user';
 })
 export class PostComponent implements OnInit {
  @Input() post!: Post;
+ data: FormData = new FormData();
  currentUser!: User;
  showDelete: boolean = false;
  showEdit: boolean = false;
@@ -30,11 +31,10 @@ export class PostComponent implements OnInit {
 
   ngOnInit(): void {
     const postId = Number(this.route.snapshot.paramMap.get('postId'));
-    this.currentUser = this.userService.currUser;
+    this.getCurrUser();
     this.postService.getPost(postId).subscribe(
       (post: Post) => {
         this.post = post;
-        this.postService.currPost = post;
         if(this.currentUser.username == this.post.poster.username || this.currentUser.isAdmin) {
           this.showDelete = true;
         }
@@ -71,14 +71,18 @@ export class PostComponent implements OnInit {
     this.showSubmit = true;
   }
 
+  getCurrUser(): void{
+    this.userService.getCurrentUser().subscribe(user => this.currentUser = user);
+  }
+
   onSubmit() {
     if(this.title != '') {
-      this.post.title = this.title;
+      this.data.append("title", this.title);
     }
     if(this.description != '') {
-      this.post.descript = this.description;
+      this.data.append("descript", this.description);
     }
-    this.postService.updatePost(this.post.post_id, this.post).subscribe(
+    this.postService.updatePost(this.post.post_id, this.data).subscribe(
       (post: Post) => {
         this.post = post;
         this.showSubmit = false;
